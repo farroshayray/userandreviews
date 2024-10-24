@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>User List</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/logo.png') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
     <style>
         * {
@@ -101,7 +102,7 @@
         </div>
         <ul class="nav-links">
             <li><a href="{{ url_for('home') }}">Home</a></li>
-            <li><a href="https://documenter.getpostman.com/view/37782623/2sAXxLBE2C" target="_blank" rel="noopener noreferrer">Documentation</a></li>
+            <li><a href="https://documenter.getpostman.com/view/37782623/2sAY4rFk8u" target="_blank" rel="noopener noreferrer">Documentation</a></li>
             <li><a href="#">API</a></li>
             <li><a href="#">Contact</a></li>
             <li><a href="#">About</a></li>
@@ -144,13 +145,17 @@
                     <td>{{ user.email }}</td>
                     <td>{{ user.role }}</td>
                     {% if logusername and user.username != logusername %}  <!-- Prevent admin from deleting themselves -->
-                    <td>
-                        <form action="{{ url_for('delete_user', user_id=user.id) }}" method="post" style="display:inline;">
-                            <button type="submit" class="delete-button" onclick="return confirm('Are you sure you want to delete this user?');">Delete</button>
-                        </form>
-                    </td>
+                        {% if logrole == 'Admin' %}
+                        <td>
+                            <form action="{{ url_for('delete_user', user_id=user.id) }}" method="post" style="display:inline;">
+                                <button type="submit" class="delete-button" onclick="return confirm('Are you sure you want to delete this user?');">Delete</button>
+                            </form>
+                        </td>
+                        {% else %}
+                        <td>you are not admin</td>
+                        {% endif %}
                     {% else %}
-                    <td></td> <!-- Empty cell for current user -->
+                    <td>cannot delete current user</td> <!-- Empty cell for current user -->
                     {% endif %}
                 </tr>
                 {% endfor %}

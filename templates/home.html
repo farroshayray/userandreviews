@@ -19,7 +19,11 @@
         <strong class="usename-navbar">{{ username if username else '' }}</strong>
         <ul class="nav-links">
             <li><a href="{{ url_for('home') }}">Home</a></li>
-            <li><a href="https://documenter.getpostman.com/view/37782623/2sAXxLBE2C" target="_blank" rel="noopener noreferrer">Documentation</a></li>
+            {% if username %}
+            <li><a href="https://documenter.getpostman.com/view/37782623/2sAY4rFk8u" target="_blank" rel="noopener noreferrer">Documentation</a></li>
+            {% else %}
+            <li></li>
+            {% endif %}
             <li><a href="#">API</a></li>
             {% if username %}
                 <li><a href="{{ url_for('users') }}">User List</a></li>
@@ -39,68 +43,80 @@
         <h1 class="header-text">
             Hello, {{ username if username else 'there' }}!
         </h1>
-        <h2 class="h2-text">User Management API</h2>
-        <p></p>
+        <h2 class="h2-text">User and review Management API</h2>
         <div class="link-container">
             <div>
                 {% if username %}
-                    <a href="{{url_for('reviews.review')}}" class="documentation">
-                        Go Review
-                    </a>
+                    {% if logrole == 'Admin' %}
+                        <a href="{{url_for('reviews.review')}}" class="documentation">
+                            Go Review
+                        </a>
+                    {% else %}
+                        <a href="{{url_for('users')}}" class="documentation">
+                            See Users
+                        </a>
+                    {% endif %}
                 {% else %}
                     <a href="{{url_for('auth.login')}}" class="documentation">
                         Login
                     </a>
                 {% endif %}            
             </div>
+            {% if username %}
+                <p></p>
+            {% else %}
+                <p class="before-login">Please Login to see Documentation</p>
+            {% endif %}
         </div>
     </div>
     <!--reviews-->
-    <div class="review-container">
-        <h2 class="existing-reviews">Existing Reviews by Rating</h2>
-    
-        {% for i in range(1, 6) %}
-            <!-- Judul Carousel berdasarkan Rating -->
-            <h3 class="carousel-title">
-                {{ '⭐' * i }}
-            </h3>
-    
-            <!-- Carousel untuk setiap Rating -->
-            <div id="reviewCarousel{{ i }}" class="carousel slide" data-ride="carousel">
-                <div class="carousel-inner">
-                    {% set reviews_by_rating = reviews | selectattr('rating', 'equalto', i) | list %}
-    
-                    {% if reviews_by_rating %}
-                        {% for review in reviews_by_rating %}
-                        <div class="carousel-item {% if loop.index == 1 %}active{% endif %}">
-                            <div class="review-item text-center">
-                                <div class="review-header">
-                                    <span class="rating">⭐ {{ review.rating }}</span>
+    {% if logrole == 'Admin' %}
+        <div class="review-container">
+            <h2 class="existing-reviews">Existing Reviews by Rating</h2>
+        
+            {% for i in range(1, 6) %}
+                <!-- Judul Carousel berdasarkan Rating -->
+                <h3 class="carousel-title">
+                    {{ '⭐' * i }}
+                </h3>
+        
+                <!-- Carousel untuk setiap Rating -->
+                <div id="reviewCarousel{{ i }}" class="carousel slide" data-ride="carousel">
+                    <div class="carousel-inner">
+                        {% set reviews_by_rating = reviews | selectattr('rating', 'equalto', i) | list %}
+        
+                        {% if reviews_by_rating %}
+                            {% for review in reviews_by_rating %}
+                            <div class="carousel-item {% if loop.index == 1 %}active{% endif %}">
+                                <div class="review-item text-center">
+                                    <div class="review-header">
+                                        <span class="rating">⭐ {{ review.rating }}</span>
+                                    </div>
+                                    <strong class="review-email">{{ review.email }}</strong>
+                                    <p class="review-description">{{ review.description }}</p>
                                 </div>
-                                <strong class="review-email">{{ review.email }}</strong>
-                                <p class="review-description">{{ review.description }}</p>
                             </div>
-                        </div>
-                        {% endfor %}
-                    {% else %}
-                        <div class="carousel-item active">
-                            <p class="no-reviews">No reviews available for this rating.</p>
-                        </div>
-                    {% endif %}
+                            {% endfor %}
+                        {% else %}
+                            <div class="carousel-item active">
+                                <p class="no-reviews">No reviews available for this rating.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+        
+                    <!-- Carousel Controls -->
+                    <a class="carousel-control-prev" href="#reviewCarousel{{ i }}" role="button" data-slide="prev">
+                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                        <span class="sr-only">Previous</span>
+                    </a>
+                    <a class="carousel-control-next" href="#reviewCarousel{{ i }}" role="button" data-slide="next">
+                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                        <span class="sr-only">Next</span>
+                    </a>
                 </div>
-    
-                <!-- Carousel Controls -->
-                <a class="carousel-control-prev" href="#reviewCarousel{{ i }}" role="button" data-slide="prev">
-                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                    <span class="sr-only">Previous</span>
-                </a>
-                <a class="carousel-control-next" href="#reviewCarousel{{ i }}" role="button" data-slide="next">
-                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                    <span class="sr-only">Next</span>
-                </a>
-            </div>
-        {% endfor %}
-    </div>        
+            {% endfor %}
+        </div>
+    {% endif %}        
     <!-- Footer -->
     <footer class="footer">
         <div class="footer-info">

@@ -1,4 +1,4 @@
-from flask import abort, request, render_template, flash, redirect
+from flask import abort, request, render_template, flash, redirect, url_for, jsonify
 from flask_login import login_required, current_user
 from functools import wraps
 from . import reviews
@@ -14,31 +14,95 @@ def admin_required(f):
 
 @reviews.route('/', methods=['GET', 'POST'])
 @login_required
-# @admin_required
+@admin_required
 def review():
-    username = current_user.username if current_user.is_authenticated else None
+    username = current_user.username if current_user.is_authenticated else None #Get login data
     role = current_user.role
+
     if request.method == 'POST':
-        description = request.form['description']
-        rating = request.form['rating']
+        try:
+            if request.is_json:
+                data = request.get_json()
+                email = data.get('email', current_user.email).strip()
+                description = data.get('description', '').strip()
+                rating = int(data.get('rating', '0'))
+            else:
+                email = current_user.email
+                description = request.form['description'].strip()
+                rating = int(request.form['rating'])
 
-        new_review = Review(description=description, email=current_user.email, rating=rating)
-        db.session.add(new_review)
-        db.session.commit()
+            if not description:
+                raise ValueError("Description cannot be empty")
+            if not (1 <= rating <= 5):
+                raise ValueError("Rating must between 1 and 5.")
 
-        flash('Review added successfully!')
+            new_review = Review(description=description, email=email, rating=rating)
+            db.session.add(new_review)
+            db.session.commit()
+
+            if request.is_json:
+                return jsonify({
+                    'data': {
+                        'email': email,
+                        'description': description,
+                        'rating': rating
+                    },
+                    'message': 'Review added successfully!'
+                }), 201
+
+            flash('Review added successfully!', 'success')
+            return redirect(url_for('reviews.review'))
+
+        except ValueError as ve:  # for error input validation
+            db.session.rollback()  # Rollback if error
+            if request.is_json:
+                return jsonify({'error': str(ve)}), 400
+            flash(str(ve), 'danger')
+
+        except Exception as e:  # error for all
+            db.session.rollback()
+            if request.is_json:
+                return jsonify({'error': 'An error occurred. Please try again.'}), 500
+            flash('An error occurred. Please try again.', 'danger')
+            return redirect(url_for('reviews.review'))
+
+    if request.method == 'GET':
+        reviews = Review.query.all()
+        if request.is_json:
+            return jsonify({
+                'data': [{
+                    'review_id': review.review_id,
+                    'email': review.email,
+                    'description': review.description,
+                    'rating': review.rating
+                } for review in reviews]
+            })
+        return render_template('reviews.html', username=username, role=role, reviews=reviews)
+
     
-    return render_template('reviews.html', username=username, role=role, reviews=Review.query.all())
-
 @reviews.route('/delete/<int:review_id>', methods=['POST'])
 @login_required
 @admin_required
 def delete_review(review_id):
-    review = Review.query.get_or_404(review_id)
+    # get review by id
+    review = Review.query.get(review_id)
+
+    # if review not found
+    if not review:
+        if request.is_json:
+            return jsonify({'message': "Data doesn't exist"}), 404
+        flash("Data doesn't exist", 'danger')
+        return redirect(request.referrer or url_for('reviews.review'))
+
     db.session.delete(review)
     db.session.commit()
-    flash('Review deleted successfully!')
-    return redirect(request.referrer)  # Redirect back to the page the user came from
+
+    if request.is_json:
+        return jsonify({'message': 'Review deleted successfully!'}), 200
+
+    flash('Review deleted successfully!', 'success')
+    return redirect(request.referrer or url_for('reviews.review'))
+
 
 @reviews.route('/dashboard', methods=['GET'])
 @login_required

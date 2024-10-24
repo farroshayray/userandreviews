@@ -163,7 +163,11 @@
         <ul class="nav-links">
             <li><a href="{{ url_for('home') }}">Home</a></li>
             <li><a href="{{ url_for('about') }}">About API</a></li>
-            <li><a href="#">Documentation</a></li>
+            {% if username %}
+            <li><a href="https://documenter.getpostman.com/view/37782623/2sAY4rFk8u" target="_blank" rel="noopener noreferrer">Documentation</a></li>
+            {% else %}
+            <li></li>
+            {% endif %}
             <li><a href="#">Contact</a></li>
             {% if current_user.is_authenticated %}
                 <li><a href="{{ url_for('auth.logout') }}">Logout</a></li>

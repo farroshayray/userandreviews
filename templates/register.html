@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Register Form</title>
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/logo.png') }}">
   <style>
 
     * {
@@ -124,6 +125,10 @@
     button:hover {
       background-color: #007971;
     }
+    .alert {
+      color: red;
+      margin-top: 1vw;
+    }
 
     @media (max-width: 480px) {
       form {
@@ -139,10 +144,9 @@
     </div>
     <ul class="nav-links">
       <li><a href="{{ url_for('home') }}">Home</a></li>
-      <li><a href="https://documenter.getpostman.com/view/37782623/2sAXxLBE2C" target="_blank" rel="noopener noreferrer">Documentation</a></li>
       <li><a href="#">API</a></li>
       <li><a href="#">Contact</a></li>
-      <li><a href="#">About</a></li>
+      <li><a href="{{ url_for('about') }}">About</a></li>
       <li><a href="{{ url_for('auth.login') }}">Login</a></li>
     </ul>
   </nav>
@@ -152,8 +156,18 @@
     <input type="text" name="username" placeholder="Username" required />
     <input type="email" name="email" placeholder="Email" required />
     <input type="password" name="password" placeholder="Password" required />
+    <input type="password" name="repassword" placeholder="Re-input Password" required />
     <input type="text" name="role" placeholder="Role Code" value="user"/>
     <button type="submit">Register</button>
+    {% with messages = get_flashed_messages(with_categories=True) %}
+        {% if messages %}
+            <div class="flash-messages">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
     <p class="confirm-account">have an account yet? <a class="confirm-link" href="{{ url_for('auth.login') }}">Login</a></p>
   </form>
 </body>
